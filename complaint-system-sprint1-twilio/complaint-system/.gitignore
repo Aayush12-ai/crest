@@ -1,0 +1,34 @@
+# ─── SECRETS — NEVER COMMIT THESE ────────────────────────────
+.env
+.env.local
+.env.production
+.env.staging
+*.pem
+*.key
+*.p12
+secrets/
+
+# ─── Python ───────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# ─── Node (future frontend) ───────────────────────────────────
+node_modules/
+.next/
+.nuxt/
+
+# ─── Docker ───────────────────────────────────────────────────
+*.log
+
+# ─── OS ───────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ─── IDE ──────────────────────────────────────────────────────
+.vscode/
+.idea/

@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    # ── These come from GitHub → Settings → Secrets and variables → Actions
+    # ── Never hardcoded here. GitHub injects them as environment variables.
+    env:
+      POSTGRES_DB:       complaints_db
+      POSTGRES_USER:     cms_user
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+      REDIS_PASSWORD:    ${{ secrets.REDIS_PASSWORD }}
+      DATABASE_URL:      postgresql://cms_user:${{ secrets.POSTGRES_PASSWORD }}@localhost:5432/complaints_db
+      REDIS_URL:         redis://:${{ secrets.REDIS_PASSWORD }}@localhost:6379
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      TWILIO_SID:        ${{ secrets.TWILIO_SID }}
+      TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
+      TWILIO_NUMBER:     ${{ secrets.TWILIO_NUMBER }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start Postgres + Redis
+        run: docker compose up -d postgres redis
+
+      - name: Wait for services to be healthy
+        run: |
+          echo "Waiting for Postgres..."
+          timeout 30 bash -c 'until docker compose exec -T postgres pg_isready; do sleep 2; done'
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install ingest dependencies
+        run: pip install -r services/ingest/requirements.txt
+
+      - name: Run ingest tests
+        run: pytest services/ingest/tests/ -v
